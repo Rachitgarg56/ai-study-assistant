@@ -1,0 +1,62 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Dependency directories
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+out/
+target/
+
+# Cache
+.cache/
+.tmp/
+temp/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Java
+*.class
+
+# C / C++
+*.o
+*.out
+
+# Archives
+*.zip
+*.tar
+*.gz
+
+# Coverage reports
+coverage/
+.coverage
+htmlcov/
+
+# Test output
+junit.xml
+
+# Mac/Linux temp files
+*~

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Agent AI Study Assistant</title>
+  <!-- Google Fonts: Inter & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Background decorative glows -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-container">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-brain-circuit"></i>
+        </div>
+        <div>
+          <h1 class="logo-title">Antigravity</h1>
+          <p class="logo-subtitle">Multi-Agent AI Study Assistant</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="theme-toggle" class="btn-icon" title="Toggle Theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <button id="settings-toggle" class="btn-icon" title="Settings">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Settings Modal (Glassmorphism Overlay) -->
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-sliders"></i> Configuration Settings</h3>
+        <button id="settings-close" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Execution Mode</label>
+          <div class="toggle-switch-container">
+            <span class="toggle-label-text">Demo Mode (Mock API Data)</span>
+            <label class="switch">
+              <input type="checkbox" id="mock-mode-checkbox" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <p class="help-text">Demo mode generates simulated high-quality outputs instantly without requiring a Gemini API key. Perfect for trial runs!</p>
+        </div>
+        
+        <div class="form-group" id="api-key-group" style="display: none;">
+          <label for="api-key-input" class="form-label">
+            Gemini API Key 
+            <span class="secure-badge"><i class="fa-solid fa-lock"></i> Saved Locally</span>
+          </label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-key input-icon"></i>
+            <input type="password" id="api-key-input" placeholder="Enter your gemini-2.5-flash API key...">
+          </div>
+          <p class="help-text">Providing your API key runs real Gemini models. The key is stored safely only in your local browser storage and is never saved on our servers.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="settings-save-btn" class="btn btn-primary">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="container main-content">
+    <!-- Top Section: Inputs & Terminal -->
+    <div class="workspace-grid">
+      
+      <!-- Input Panel -->
+      <section class="card glass-card input-panel">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-circle-play text-primary"></i> Source Material</h2>
+          <span class="mode-badge" id="current-mode-badge">Demo Mode</span>
+        </div>
+        
+        <div class="card-body">
+          <div class="tabs-control input-tabs">
+            <button class="tab-btn active" data-target="youtube-tab">
+              <i class="fa-brands fa-youtube"></i> YouTube Video
+            </button>
+            <button class="tab-btn" data-target="manual-tab">
+              <i class="fa-solid fa-file-lines"></i> Paste Transcript
+            </button>
+          </div>
+          
+          <div class="tab-contents">
+            <!-- YouTube Video Input -->
+            <div id="youtube-tab" class="tab-pane active">
+              <div class="form-group">
+                <label for="youtube-url" class="form-label">YouTube URL</label>
+                <div class="input-wrapper">
+                  <i class="fa-brands fa-youtube input-icon text-youtube"></i>
+                  <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+                <p class="help-text">Enter any educational video, lecture, or tutorial URL with English subtitles.</p>
+              </div>
+            </div>
+            
+            <!-- Manual Transcript Paste -->
+            <div id="manual-tab" class="tab-pane">
+              <div class="form-group">
+                <label for="manual-transcript" class="form-label">Raw Transcript Text</label>
+                <textarea id="manual-transcript" rows="6" placeholder="Paste the raw, uncleaned text transcript of a video here..."></textarea>
+                <p class="help-text">Use this fallback if YouTube blocks transcription scraping or captions are missing.</p>
+              </div>
+            </div>
+          </div>
+
+          <button id="process-btn" class="btn btn-block btn-primary btn-glow-anim">
+            <span>Coordinate Study Agents</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- Agent Activity Hub (Terminal & Graph) -->
+      <section class="card glass-card terminal-panel">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-network-wired text-secondary"></i> Agent Activity Log</h2>
+          <button id="clear-terminal" class="btn-text" title="Clear logs">Clear</button>
+        </div>
+        <div class="card-body terminal-body">
+          <!-- Visual Agent Connections -->
+          <div class="agent-nodes-grid">
+            <div class="agent-node" id="node-TranscriptAgent" data-agent="TranscriptAgent">
+              <i class="fa-solid fa-scissors"></i>
+              <span>Transcript</span>
+            </div>
+            <div class="agent-node" id="node-SummaryAgent" data-agent="SummaryAgent">
+              <i class="fa-solid fa-book-open"></i>
+              <span>Summary</span>
+            </div>
+            <div class="agent-node" id="node-QuizAgent" data-agent="QuizAgent">
+              <i class="fa-solid fa-clipboard-question"></i>
+              <span>Quiz</span>
+            </div>
+            <div class="agent-node" id="node-FlashcardAgent" data-agent="FlashcardAgent">
+              <i class="fa-solid fa-clone"></i>
+              <span>Flashcard</span>
+            </div>
+            <div class="agent-node" id="node-FormatterAgent" data-agent="FormatterAgent">
+              <i class="fa-solid fa-signature"></i>
+              <span>Formatter</span>
+            </div>
+          </div>
+
+          <!-- Log screen -->
+          <div class="terminal-screen" id="terminal-screen">
+            <div class="terminal-line system-line">
+              <span class="prompt">></span> System initialized. Multi-Agent Coordinator is idle. Ready to analyze.
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Bottom Section: Study Center (Visible after processing) -->
+    <section id="study-center" class="study-center-section card glass-card" style="display: none;">
+      <div class="card-header study-header">
+        <div class="study-title-wrapper">
+          <span class="study-badge">Study Center</span>
+          <h2 id="study-session-title">Introduction to Big O Notation</h2>
+        </div>
+        <div class="study-actions">
+          <button id="copy-markdown-btn" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-copy"></i> Copy Markdown
+          </button>
+          <button id="download-markdown-btn" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-download"></i> Download Notes
+          </button>
+        </div>
+      </div>
+
+      <div class="tabs-control study-tabs">
+        <button class="tab-btn active" data-target="study-summary-tab">
+          <i class="fa-solid fa-file-invoice"></i> Summary Notes
+        </button>
+        <button class="tab-btn" data-target="study-quiz-tab">
+          <i class="fa-solid fa-circle-question"></i> Practice Quiz
+        </button>
+        <button class="tab-btn" data-target="study-flashcards-tab">
+          <i class="fa-solid fa-clone"></i> Flashcards
+        </button>
+        <button class="tab-btn" data-target="study-markdown-tab">
+          <i class="fa-solid fa-code"></i> Raw Markdown
+        </button>
+      </div>
+
+      <div class="tab-contents study-tab-contents">
+        
+        <!-- Summary Notes Tab -->
+        <div id="study-summary-tab" class="tab-pane study-pane active">
+          <div class="notes-container">
+            <div class="summary-notes-area">
+              <!-- Rendered dynamic summaries -->
+            </div>
+            
+            <div class="concepts-sidebar">
+              <h3>Key Concepts</h3>
+              <div class="concepts-list">
+                <!-- Rendered concepts -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Practice Quiz Tab -->
+        <div id="study-quiz-tab" class="tab-pane study-pane">
+          <div class="quiz-wrapper">
+            <div class="quiz-progress-bar">
+              <div class="progress-fill" id="quiz-progress"></div>
+            </div>
+            <div class="quiz-header-status">
+              <span id="quiz-question-counter">Question 1 of 5</span>
+              <span id="quiz-score-display">Score: 0/0</span>
+            </div>
+            <div class="quiz-card-container">
+              <div class="quiz-question" id="quiz-question-text">
+                <!-- Question -->
+              </div>
+              <div class="quiz-options-list" id="quiz-options-list">
+                <!-- Option Buttons -->
+              </div>
+              <div class="quiz-explanation-box" id="quiz-explanation-box" style="display: none;">
+                <h4><i class="fa-solid fa-circle-info"></i> Explanation</h4>
+                <p id="quiz-explanation-text"></p>
+              </div>
+            </div>
+            <div class="quiz-footer-actions">
+              <button id="quiz-next-btn" class="btn btn-primary" style="display: none;">
+                <span>Next Question</span>
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
+              <button id="quiz-restart-btn" class="btn btn-secondary" style="display: none;">
+                <i class="fa-solid fa-arrow-rotate-left"></i> Restart Quiz
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flashcards Tab -->
+        <div id="study-flashcards-tab" class="tab-pane study-pane">
+          <div class="flashcards-wrapper">
+            <div class="flashcards-carousel">
+              <button class="carousel-nav-btn" id="fc-prev-btn"><i class="fa-solid fa-chevron-left"></i></button>
+              
+              <div class="flashcard-container" id="interactive-flashcard">
+                <div class="flashcard">
+                  <div class="flashcard-face flashcard-front">
+                    <div class="card-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                    <div class="card-text" id="fc-front-text">Front Text</div>
+                    <div class="card-instruction">Click card to reveal answer</div>
+                  </div>
+                  <div class="flashcard-face flashcard-back">
+                    <div class="card-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <div class="card-text" id="fc-back-text">Back Text</div>
+                    <div class="card-instruction">Click card to see question</div>
+                  </div>
+                </div>
+              </div>
+
+              <button class="carousel-nav-btn" id="fc-next-btn"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div class="flashcard-counter" id="fc-counter">Card 1 of 5</div>
+          </div>
+        </div>
+
+        <!-- Raw Markdown Tab -->
+        <div id="study-markdown-tab" class="tab-pane study-pane">
+          <div class="markdown-preview-container">
+            <pre class="markdown-pre"><code id="raw-markdown-code"></code></pre>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-note">
+      <p>&copy; 2026 Antigravity Multi-Agent AI System. Built with Google Gemini 2.5 Flash.</p>
+    </footer>
+
+    <!-- App Scripts -->
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
